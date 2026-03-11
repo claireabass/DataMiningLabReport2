@@ -1,5 +1,6 @@
 import pandas as pd
 from mlxtend.frequent_patterns import apriori, fpgrowth, association_rules
+from mlxtend.preprocessing import TransactionEncoder
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -71,6 +72,8 @@ class AssociationRulesPipeline:
             if len(self.rules) > 0:
                 self.rules = self._calculate_metrics(self.rules)
                 self.rules = self._score_rules(self.rules)
+                self.rules['antecedents'] = self.rules['antecedents'].apply(lambda x: ', '.join(list(x)))
+                self.rules['consequents'] = self.rules['consequents'].apply(lambda x: ', '.join(list(x)))
                 self.version_history.append(self.rules.copy())
                 self.log.append({
                     'iteration': len(self.version_history),
@@ -113,12 +116,13 @@ class AssociationRulesPipeline:
         Returns:
             One-hot encoded DataFrame
         """
-        baskets = df['Items'].str.split(",")
-        all_items = sorted(list(set([item.strip() for sublist in baskets for item in sublist])))
-        encoded = pd.DataFrame([
-            {item: (item in basket) for item in all_items}
-            for basket in baskets
-        ])
+        # Ensure there are no empty rows and split by comma
+        baskets = df['Items'].dropna().astype(str).apply(lambda x: [item.strip() for item in x.split(',') if item.strip()])
+        
+        # Use mlxtend's built-in encoder (much faster for 1000+ rows)
+        te = TransactionEncoder()
+        te_ary = te.fit(baskets).transform(baskets)
+        encoded = pd.DataFrame(te_ary, columns=te.columns_)
         return encoded
 
     def _auto_minsup(self, encoded):
@@ -167,9 +171,6 @@ class AssociationRulesPipeline:
         """
         if len(rules) == 0:
             return rules
-        
-        # Leverage: P(A,B) - P(A)*P(B)
-        rules['leverage'] = rules['support'] - (rules['support_x'] * rules['support_y'])
         
         # Certainty Factor: (confidence - P(B)) / (1 - P(B))
         rules['certainty_factor'] = (rules['confidence'] - rules['support_y']) / (1 - rules['support_y'])
