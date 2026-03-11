@@ -19,8 +19,13 @@ interface FPRule {
   trend: "up" | "down";
 }
 
-export function RuleEvaluationMetrics() {
-  const rules: FPRule[] = [
+interface RuleEvaluationMetricsProps {
+  dynamicRules?: FPRule[];
+  onViewAll?: () => void;
+}
+
+export function RuleEvaluationMetrics({ dynamicRules, onViewAll }: RuleEvaluationMetricsProps) {
+  const defaultRules: FPRule[] = [
     {
       id: "rule1",
       antecedent: { name: "Paldean Wooper Burger", image: imgPaldeanBurger },
@@ -78,6 +83,8 @@ export function RuleEvaluationMetrics() {
     },
   ];
 
+  const rules = dynamicRules && dynamicRules.length > 0 ? dynamicRules : defaultRules;
+
   const TrendIcon = ({ trend }: { trend: "up" | "down" }) => {
     return trend === "up" ? (
       <TrendingUp className="w-4 h-4 text-[var(--success-green)]" />
@@ -124,19 +131,29 @@ export function RuleEvaluationMetrics() {
                 className="border-b border-[var(--border)] hover:bg-[var(--accent)] hover:bg-opacity-20 transition-colors"
               >
                 <td className="py-3 px-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-[#fcfaf8] p-1.5 rounded-lg border border-[var(--border)]">
-                      <img src={rule.antecedent.image} alt={rule.antecedent.name} className="w-8 h-8 object-contain" />
-                      <span className="font-medium text-sm text-[var(--foreground)] max-w-[120px] truncate" title={rule.antecedent.name}>
-                        {rule.antecedent.name}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 bg-[#fcfaf8] py-1 px-2 rounded-lg border border-[var(--border)] max-w-[180px]">
+                      <img src={rule.antecedent.image} alt={rule.antecedent.name} className="w-7 h-7 object-contain flex-shrink-0" />
+                      <span className="font-medium text-xs text-[var(--foreground)] truncate" title={rule.antecedent.name}>
+                        {rule.antecedent.name.includes(',') ? rule.antecedent.name.split(',')[0].trim() : rule.antecedent.name}
                       </span>
+                      {rule.antecedent.name.includes(',') && (
+                        <span className="text-[10px] bg-[var(--border)] text-[var(--muted-foreground)] rounded px-1 py-0.5 flex-shrink-0" title={rule.antecedent.name}>
+                          +{rule.antecedent.name.split(',').length - 1}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-[var(--muted-foreground)] font-bold">→</span>
-                    <div className="flex items-center gap-2 bg-[#fcfaf8] p-1.5 rounded-lg border border-[var(--border)]">
-                      <img src={rule.consequent.image} alt={rule.consequent.name} className="w-8 h-8 object-contain" />
-                      <span className="font-medium text-sm text-[var(--foreground)] max-w-[120px] truncate" title={rule.consequent.name}>
-                        {rule.consequent.name}
+                    <span className="text-[var(--muted-foreground)] font-bold flex-shrink-0">→</span>
+                    <div className="flex items-center gap-1.5 bg-[#fcfaf8] py-1 px-2 rounded-lg border border-[var(--border)] max-w-[180px]">
+                      <img src={rule.consequent.image} alt={rule.consequent.name} className="w-7 h-7 object-contain flex-shrink-0" />
+                      <span className="font-medium text-xs text-[var(--foreground)] truncate" title={rule.consequent.name}>
+                        {rule.consequent.name.includes(',') ? rule.consequent.name.split(',')[0].trim() : rule.consequent.name}
                       </span>
+                      {rule.consequent.name.includes(',') && (
+                        <span className="text-[10px] bg-[var(--border)] text-[var(--muted-foreground)] rounded px-1 py-0.5 flex-shrink-0" title={rule.consequent.name}>
+                          +{rule.consequent.name.split(',').length - 1}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </td>
@@ -169,9 +186,9 @@ export function RuleEvaluationMetrics() {
       
       <div className="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between">
         <p className="text-sm text-[var(--muted-foreground)]">
-          Showing 5 of 23 active rules
+          {dynamicRules && dynamicRules.length > 0 ? `Showing top ${rules.length} active rules from API` : `Showing 5 of 23 active rules`}
         </p>
-        <button className="text-sm font-semibold text-[var(--cafe-wood)] hover:underline">
+        <button onClick={onViewAll} className="text-sm font-semibold text-[var(--cafe-wood)] hover:underline">
           View All Rules →
         </button>
       </div>

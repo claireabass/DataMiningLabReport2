@@ -14,8 +14,14 @@ interface Recommendation {
   image: string;
 }
 
-export function MenuRecommendations() {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([
+interface MenuRecommendationsProps {
+  dynamicRecommendations?: Recommendation[];
+}
+
+import { useEffect } from "react";
+
+export function MenuRecommendations({ dynamicRecommendations }: MenuRecommendationsProps) {
+  const defaultRecommendations: Recommendation[] = [
     {
       id: "1",
       type: "promo",
@@ -40,7 +46,17 @@ export function MenuRecommendations() {
       impact: "Est. +15% margin",
       image: imgLatte,
     }
-  ]);
+  ];
+
+  const [recommendations, setRecommendations] = useState<Recommendation[]>(
+    dynamicRecommendations && dynamicRecommendations.length > 0 ? dynamicRecommendations : defaultRecommendations
+  );
+
+  useEffect(() => {
+    if (dynamicRecommendations && dynamicRecommendations.length > 0) {
+      setRecommendations(dynamicRecommendations);
+    }
+  }, [dynamicRecommendations]);
 
   const handleApprove = (id: string) => {
     setRecommendations(recommendations.filter(rec => rec.id !== id));

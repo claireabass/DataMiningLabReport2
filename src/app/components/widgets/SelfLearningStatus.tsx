@@ -1,13 +1,17 @@
-import { AlertTriangle, Info, Bell, Activity } from "lucide-react";
+import { AlertTriangle, Info, Bell, Activity, CheckCircle } from "lucide-react";
 
-export function SelfLearningStatus() {
+interface SelfLearningStatusProps {
+  dynamicDrift?: { drift_detected: boolean; drift_score: number };
+}
+
+export function SelfLearningStatus({ dynamicDrift }: SelfLearningStatusProps) {
   const notifications = [
     {
       id: 1,
       type: "info",
       icon: Info,
       title: "Model Retrained",
-      desc: "Apriori model completed epoch 45. Accuracy improved by 2.1%.",
+      desc: "FP-Growth model retrained successfully. Rules updated with latest transaction patterns.",
       time: "10 mins ago"
     },
     {
@@ -36,17 +40,35 @@ export function SelfLearningStatus() {
       </div>
       
       <div className="mb-6">
-        <div className="bg-[#fff8e1] border-l-4 border-[var(--alert-orange)] rounded-r-lg p-4 shadow-sm">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-[var(--alert-orange)] flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-sm text-[var(--foreground)] mb-1">Pattern drift detected in 'Snorlax Tummy Filling Nap'</p>
-              <p className="text-sm text-[var(--muted-foreground)]">
-                Auto-lowering minimum support threshold to 0.03.
-              </p>
+        {dynamicDrift && dynamicDrift.drift_detected ? (
+          <div className="bg-[#fff8e1] border-l-4 border-[var(--alert-orange)] rounded-r-lg p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-[var(--alert-orange)] flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-sm text-[var(--foreground)] mb-1">
+                  Concept Drift Detected! (Score: {(dynamicDrift.drift_score * 100).toFixed(1)}%)
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  Consumer pattern has shifted significantly. Auto-updating rules based on recent trends.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#f0fcf4] border-l-4 border-[var(--success-green)] rounded-r-lg p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-[var(--success-green)] flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-sm text-[var(--foreground)] mb-1">
+                  Pattern Stable
+                </p>
+                <p className="text-sm text-[var(--muted-foreground)]">
+                  Consumer patterns are relatively consistent with the existing models.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4 pr-2">

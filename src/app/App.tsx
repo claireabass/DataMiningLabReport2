@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
 import { SelfLearningStatus } from "./components/widgets/SelfLearningStatus";
@@ -10,32 +10,69 @@ import { PipelineArchitectureTab } from "./components/tabs/PipelineArchitectureT
 import { UploadCloud, FileText, Loader2 } from "lucide-react";
 
 export default function App() {
+  // Reset the backend pipeline on page load/refresh
+  useEffect(() => {
+    fetch('http://localhost:5000/api/reset', { method: 'POST' }).catch(() => {});
+  }, []);
   const [activeTab, setActiveTab] = useState("overview");
   const [hasDataset, setHasDataset] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [iteration, setIteration] = useState(0);
   const [activeDataset, setActiveDataset] = useState("No dataset selected");
   const [datasets, setDatasets] = useState<string[]>([]);
+  const [rules, setRules] = useState<any[]>([]);
+  const [allRules, setAllRules] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [drift, setDrift] = useState({ drift_detected: false, drift_score: 0 });
 
-  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setIsUploading(true);
-      const fileName = e.target.files[0].name;
+      const file = e.target.files[0];
+      const fileName = file.name;
       
       const nextLetter = String.fromCharCode(65 + datasets.length);
       const newDatasetName = `Dataset ${nextLetter}: ${fileName}`;
       
-      // Simulate file processing and ML model generation
-      setTimeout(() => {
-        setIsUploading(false);
-        setHasDataset(true);
-        setIteration(prev => prev + 1);
-        setDatasets(prev => [...prev, newDatasetName]);
-        setActiveDataset(newDatasetName);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const response = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
         
-        // Reset the input so the same file can be uploaded again if needed
+        if (data.success) {
+          setHasDataset(true);
+          setIteration(data.iteration);
+          if (!datasets.includes(newDatasetName)) {
+            setDatasets(prev => [...prev, newDatasetName]);
+          }
+          setActiveDataset(newDatasetName);
+          setRules(data.rules || []);
+          if (data.recommendations && data.recommendations.length > 0) {
+              setRecommendations(data.recommendations);
+          }
+          setDrift(data.drift || { drift_detected: false, drift_score: 0 });
+
+          // Fetch all rules for the Rules Explorer
+          try {
+            const rulesRes = await fetch('http://localhost:5000/api/rules');
+            const rulesData = await rulesRes.json();
+            setAllRules(rulesData.rules || []);
+          } catch { setAllRules(data.rules || []); }
+        } else {
+          alert('Error processing file: ' + data.error);
+        }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('Failed to connect to ML backend. Is the Python server running?');
+      } finally {
+        setIsUploading(false);
         e.target.value = '';
-      }, 2000);
+      }
     }
   };
 
@@ -54,9 +91,9 @@ export default function App() {
 
     switch (activeTab) {
       case "rules":
-        return <RulesExplorerTab />;
+        return <RulesExplorerTab dynamicRules={allRules} />;
       case "optimization":
-        return <MenuOptimizationTab />;
+        return <MenuOptimizationTab dynamicRecommendations={recommendations} dynamicRules={allRules} hasData={hasDataset} />;
       case "pipeline":
         return <PipelineArchitectureTab />;
       case "overview":
@@ -65,16 +102,16 @@ export default function App() {
           <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <div className="lg:col-span-1 h-[450px]">
-                <SelfLearningStatus />
+                <SelfLearningStatus dynamicDrift={drift} />
               </div>
               
               <div className="lg:col-span-2 h-[450px]">
-                <RuleEvaluationMetrics />
+                <RuleEvaluationMetrics dynamicRules={rules} onViewAll={() => setActiveTab("rules")} />
               </div>
             </div>
 
             <div className="w-full">
-              <MenuRecommendations />
+              <MenuRecommendations dynamicRecommendations={recommendations} />
             </div>
           </>
         );

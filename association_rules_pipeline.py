@@ -172,15 +172,16 @@ class AssociationRulesPipeline:
         if len(rules) == 0:
             return rules
         
+        
         # Certainty Factor: (confidence - P(B)) / (1 - P(B))
-        rules['certainty_factor'] = (rules['confidence'] - rules['support_y']) / (1 - rules['support_y'])
+        rules['certainty_factor'] = (rules['confidence'] - rules['consequent support']) / (1 - rules['consequent support'])
         rules['certainty_factor'] = rules['certainty_factor'].replace([float('inf'), -float('inf')], 0)
         
         # Rule Coverage: support of antecedent
-        rules['antecedent_coverage'] = rules['support_x']
+        rules['antecedent_coverage'] = rules['antecedent support']
         
         # Rule Prevalence: support of consequent
-        rules['consequent_prevalence'] = rules['support_y']
+        rules['consequent_prevalence'] = rules['consequent support']
         
         return rules
 
