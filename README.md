@@ -1,6 +1,6 @@
 # Data Mining Lab Report Dashboard
 
-This project is a React application built with [Vite](https://vitejs.dev/).
+A full-stack data mining application featuring a **React + Vite** frontend and a **Flask (Python)** backend that runs an association rules pipeline (FP-Growth / Apriori) with business intelligence insights.
 
 ## Getting Started
 
@@ -8,34 +8,49 @@ Follow these steps to get the project running on your local machine.
 
 ### Prerequisites
 
-Make sure you have [Node.js](https://nodejs.org/) installed (which includes `npm`).
+| Tool | Version | Download |
+|------|---------|----------|
+| **Node.js** (includes `npm`) | 18+ recommended | [nodejs.org](https://nodejs.org/) |
+| **Python** | 3.9+ recommended | [python.org](https://www.python.org/) |
 
 ### Installation
 
 1. Clone this repository (if you haven't already):
    ```bash
    git clone https://github.com/claireabass/DataMiningLabReport2.git
-   ```
-
-2. Navigate into the project directory:
-   ```bash
    cd DataMiningLabReport2
    ```
 
-3. Install the project dependencies:
+2. Install **frontend** dependencies:
    ```bash
    npm install
    ```
 
-### Running the Development Server
+3. Install **Python backend** dependencies:
+   ```bash
+   pip install flask flask-cors pandas mlxtend
+   ```
 
-To start the local development server, run the following command:
+### Running the Application
+
+> [!IMPORTANT]
+> **Both servers must be running at the same time.** The frontend connects to the Python backend at `http://localhost:5000`. If the backend is not running you will see a *"Failed to connect to ML backend"* error.
+
+**Terminal 1 — Start the Python backend:**
+
+```bash
+python backend.py
+```
+
+The Flask server will start on `http://localhost:5000`.
+
+**Terminal 2 — Start the frontend dev server:**
 
 ```bash
 npm run dev
 ```
 
-This will start the Vite server. Open your browser and navigate to the URL provided in the terminal (usually `http://localhost:5173/` or `http://localhost:5174/`) to view the application.
+The Vite server will start on `http://localhost:5173` (or the next available port). Open that URL in your browser.
 
 ### Building for Production
 
