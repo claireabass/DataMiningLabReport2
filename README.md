@@ -28,8 +28,12 @@ Follow these steps to get the project running on your local machine.
 
 3. Install **Python backend** dependencies:
    ```bash
-   pip install flask flask-cors pandas mlxtend
+   # Use this command if 'pip' is not recognized
+   python -m pip install flask flask-cors pandas mlxtend
    ```
+
+   > [!TIP]
+   > If `python` is also not recognized, try `py -m pip install ...` or ensure Python is added to your system's PATH.
 
 ### Running the Application
 
